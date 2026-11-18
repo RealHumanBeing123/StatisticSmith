@@ -1,0 +1,9 @@
+trial.csv - simulated blood-pressure trial (not real data)
+
+id     participant id
+arm    0 = control, 1 = treatment
+sex    F / M
+age    years
+bmi    body-mass index, kg/m^2
+sbp    systolic blood pressure, mmHg (outcome)
+event  1 = cardiovascular event during follow-up

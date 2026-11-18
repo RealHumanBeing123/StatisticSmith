@@ -1,0 +1,36 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}", cache: pip }
+      - run: pip install -r requirements-dev.txt
+      - name: Linux Qt libs
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libxkbcommon0 libdbus-1-3 libfontconfig1
+      - run: python -m pytest -q
+        env: { QT_QPA_PLATFORM: offscreen }
+  windows-build:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements-dev.txt
+      - run: pyinstaller --noconfirm statistic_smith.spec
+      - name: Self-test the built exe
+        shell: cmd
+        run: |
+          dist\StatisticSmith\StatisticSmith.exe --gui-selftest
+          if errorlevel 1 (type "%APPDATA%\StatisticSmith\gui_selftest.txt" & exit /b 1)
+      - uses: actions/upload-artifact@v4
+        with: { name: StatisticSmith-windows, path: dist/StatisticSmith }
