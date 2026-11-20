@@ -28,7 +28,7 @@ python main.py [datafile or project.ssproj]
 Tests: `pip install -r requirements-dev.txt && python -m pytest -q` (set `QT_QPA_PLATFORM=offscreen` on headless machines).
 
 ## Build a Windows app
-`scripts\build_windows.bat` (or the *windows-build* job in `.github/workflows/ci.yml`) runs PyInstaller with `statistic_smith.spec`
+`scripts\build_windows.bat` (double-click it; the window stays open and everything is logged to `build_log.txt`; or the *windows-build* job in `.github/workflows/ci.yml`) runs PyInstaller with `statistic_smith.spec`
 and produces `dist\StatisticSmith\StatisticSmith.exe`.
 
 ## Honest limitations

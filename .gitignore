@@ -9,3 +9,4 @@ dist/
 *.duckdb
 *.duckdb.wal
 .DS_Store
+build_log.txt
