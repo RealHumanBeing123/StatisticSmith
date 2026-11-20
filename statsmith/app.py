@@ -55,7 +55,7 @@ def gui_selftest(paths: list[str]) -> int:
     errors: list[str] = []
     QMessageBox.critical = staticmethod(lambda *a, **k: errors.append(str(a[1:])))
     QMessageBox.warning = staticmethod(lambda *a, **k: errors.append(str(a[1:])))
-    app = QApplication(sys.argv[:1])
+    app = QApplication.instance() or QApplication(sys.argv[:1])
     win = MainWindow(Settings())
     win.show()
     files = paths or [str(examples_dir() / "trial.csv"), str(examples_dir() / "trial.dta")]
@@ -86,6 +86,12 @@ def gui_selftest(paths: list[str]) -> int:
             from matplotlib.figure import Figure
             render("histogram", data, fig=Figure())
             report.append("OK   histogram drawn")
+    try:
+        from .learn import all_cards
+        report.append(f"OK   flashcards: {len(all_cards())} cards")
+    except Exception as e:  # noqa: BLE001
+        report.append(f"FAIL flashcards: {e}")
+        ok = False
     text = "\n".join(report + errors)
     try:
         log_path().with_name("gui_selftest.txt").write_text(text, encoding="utf-8")

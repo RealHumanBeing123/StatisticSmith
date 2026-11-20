@@ -167,6 +167,7 @@ class MainWindow(QMainWindow):
         self._act(t, "Settings…", self.show_settings, "Ctrl+,")
         # ---- Help
         h = mb.addMenu("&Help")
+        self._act(h, "Stats Flashcards…", self.show_flashcards, "F2", tip="Learn which test to use and what p-values, z-scores, standard deviations … mean")
         self._act(h, "Methods & verification notes", self.show_methods)
         self._act(h, "About", self.about)
         # ---- Toolbar (StatCrunch-style dropdown buttons)
@@ -391,6 +392,7 @@ class MainWindow(QMainWindow):
             "(histogram, box plot, scatter ...) - your selection pre-fills the dialog.</li>"
             "<li><b>Codebook</b> shows the variable labels; <b>Terminal</b> opens SQL / Python / Stata / R; "
             "<b>Script</b> shows the reproducible .do / R / Python file.</li>"
+            "<li>Not sure which test to use? <b>Help ▸ Stats Flashcards</b> (F2) teaches which test fits which data, and what p-values, z-scores and standard deviations mean.</li>"
             "<li>Open your own data with <b>File → Open data…</b> or drag a file onto the window. "
             "You can reopen the example any time from the File menu.</li></ul>")
         self.open_example()
@@ -534,6 +536,7 @@ class MainWindow(QMainWindow):
         ds, sh = self.current_ds(), self.current_sheet()
         pre = preselect if preselect is not None else (sh.selected_columns() if sh else [])
         dlg = VariableDialog(spec.name, spec.roles, spec.params, ds, pre, spec.description, self)
+        dlg.add_learn_button(lambda: self.show_flashcards(f"test:{aid}", True))
         if auto:
             sel0 = dlg.selection()
             if all(sel0.get(r.name) for r in spec.roles if r.required):
@@ -651,6 +654,16 @@ class MainWindow(QMainWindow):
         self.script_win.regenerate(force=not self.script_win.dirty)
         self.script_win.show()
         self.script_win.raise_()
+
+    def show_flashcards(self, card_id: str | None = None, flipped: bool = False):
+        from .flashcards import FlashcardDialog
+        if getattr(self, "flash_win", None) is None:
+            self.flash_win = FlashcardDialog(self, on_open_analysis=self.run_analysis_dialog)
+        self.flash_win.show()
+        self.flash_win.raise_()
+        self.flash_win.activateWindow()
+        if card_id:
+            self.flash_win.show_card_by_id(card_id, flipped)
 
     def show_methods(self):
         doc = Path(__file__).resolve().parents[2] / "docs" / "METHODS.md"

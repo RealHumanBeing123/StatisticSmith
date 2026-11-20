@@ -84,6 +84,13 @@ class VariableDialog(QDialog):
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
 
+    def add_learn_button(self, fn):
+        """'When do I use this test?' -> opens the matching flashcard."""
+        from PySide6.QtWidgets import QPushButton
+        b = QPushButton("When do I use this test? (flashcard)")
+        b.clicked.connect(fn)
+        self.layout().insertWidget(0, b)
+
     # ------------------------------------------------------------ helpers
     def _allowed(self, role) -> list[str]:
         if role.kind.startswith("numeric"):
