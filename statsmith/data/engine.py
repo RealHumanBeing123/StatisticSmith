@@ -164,25 +164,30 @@ class Engine:
         vlabels: dict[str, dict] = {}
         file_label = ""
         notes: list[str] = []
-        if ext in (".csv", ".tsv", ".txt", ".tab"):
-            self._import_delimited(p, name, ext, options, prog, cancel)
-        elif ext == ".parquet":
-            self._exec_cancellable(f"CREATE TABLE {qid(name)} AS SELECT * FROM read_parquet({qstr(str(p))})", prog, cancel,
-                                   f"Loading {p.name}")
-        elif ext in (".json", ".ndjson"):
-            self._exec_cancellable(f"CREATE TABLE {qid(name)} AS SELECT * FROM read_json_auto({qstr(str(p))})", prog, cancel,
-                                   f"Loading {p.name}")
-        elif ext in (".xlsx", ".xlsm", ".xls", ".ods"):
-            self._import_excel(p, name, options, prog, cancel)
-        elif ext == ".dta":
-            labels, vlabels, file_label = self._import_stata(p, name, options, prog, cancel)
-        elif ext in (".sav", ".sas7bdat"):
-            labels, vlabels, file_label = self._import_pyreadstat(p, name, ext, options, prog, cancel)
-        elif ext in (".rds", ".rdata", ".rda"):
-            self._import_r(p, name, options, prog, cancel, notes)
-        elif ext == ".feather":
-            import polars as pl
-            self._register_frame(name, pl.read_ipc(str(p)).to_arrow())
+        try:
+            if ext in (".csv", ".tsv", ".txt", ".tab"):
+                self._import_delimited(p, name, ext, options, prog, cancel)
+            elif ext == ".parquet":
+                self._exec_cancellable(f"CREATE TABLE {qid(name)} AS SELECT * FROM read_parquet({qstr(str(p))})", prog, cancel,
+                                       f"Loading {p.name}")
+            elif ext in (".json", ".ndjson"):
+                self._exec_cancellable(f"CREATE TABLE {qid(name)} AS SELECT * FROM read_json_auto({qstr(str(p))})", prog, cancel,
+                                       f"Loading {p.name}")
+            elif ext in (".xlsx", ".xlsm", ".xls", ".ods"):
+                self._import_excel(p, name, options, prog, cancel)
+            elif ext == ".dta":
+                labels, vlabels, file_label = self._import_stata(p, name, options, prog, cancel)
+            elif ext in (".sav", ".sas7bdat"):
+                labels, vlabels, file_label = self._import_pyreadstat(p, name, ext, options, prog, cancel)
+            elif ext in (".rds", ".rdata", ".rda"):
+                self._import_r(p, name, options, prog, cancel, notes)
+            elif ext == ".feather":
+                import polars as pl
+                self._register_frame(name, pl.read_ipc(str(p)).to_arrow())
+        except BaseException:
+            # a cancel (or error) can land after DuckDB already committed the table: never leave it behind
+            self._drop(name)
+            raise
         if cancel.is_set():
             self._drop(name)
             raise ImportCancelled()
